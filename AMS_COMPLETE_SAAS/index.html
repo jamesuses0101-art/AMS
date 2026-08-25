@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMS - Academy Management System</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ams_payment_style.css">
+  <link rel="stylesheet" href="ams_public_style.css">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- Page Loader -->
+  <div class="page-loader" id="page-loader">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Core Systems -->
+  <script src="ams_part1_core.js"></script>
+  <script src="ams_part2_auth.js"></script>
+  <script src="ams_part3_nav_onboarding.js"></script>
+  <script src="ams_part4_pages.js"></script>
+  <script src="ams_part5_reports_settings_import.js"></script>
+  <script src="ams_part6_modals.js"></script>
+  <script src="ams_payment_system.js"></script>
+
+  <!-- SaaS Multi-Tenant System -->
+  <script src="ams_saas_core.js"></script>
+  <script src="ams_saas_owner.js"></script>
+
+  <script>
+    // ==================================================
+    // APP INITIALIZATION
+    // ==================================================
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize Supabase
+      initSupabase();
+
+      // Initialize Auth
+      await Auth.init();
+
+      // Initialize Toast
+      Toast.init();
+
+      // Route based on auth state
+      if (Auth.isLoggedIn()) {
+        if (Auth.isSuperAdmin()) {
+          Router.navigate('super-admin');
+        } else if (Auth.isOwner()) {
+          const { data: academy } = await AcademyOwner.getMyAcademy();
+          if (!academy) {
+            Router.navigate('owner-onboarding');
+          } else {
+            Router.navigate('owner-dashboard');
+          }
+        } else if (Auth.isStaff()) {
+          Router.navigate('owner-dashboard');
+        }
+      } else {
+        // Check URL for public payment
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('pay')) {
+          Router.navigate('public-payment');
+        } else {
+          Router.navigate('login');
+        }
+      }
+
+      console.log('AMS SaaS initialized');
+    });
+  </script>
+</body>
+</html>
